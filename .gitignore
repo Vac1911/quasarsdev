@@ -18,3 +18,8 @@
 /phpunit.xml
 .phpunit.result.cache
 ###< phpunit/phpunit ###
+/.composer/
+/composer.lock
+/phpunit.xml.dist
+/symfony.lock
+/.env.test

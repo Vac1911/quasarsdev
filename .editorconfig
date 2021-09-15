@@ -9,11 +9,8 @@ trim_trailing_whitespace = true
 indent_size = 4
 max_line_length = 120
 
-[*.{html,twig}]
+[*.{html,twig, stub.php}]
 indent_size = 1
 
 [*.md]
 trim_trailing_whitespace = false
-
-[*.{yml,yaml}]
-indent_size = 2
