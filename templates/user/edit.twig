@@ -1,0 +1,36 @@
+{% extends 'base.twig' %}
+
+{% block body %}
+<div class="container">
+<h1>Edit User</h1>
+
+<form method="post">
+<div class="form-floating">
+ <input type="text" id="name" name="name" class="form-control">
+ <label for="name">Name</label>
+</div>
+<div class="form-floating">
+ <input type="text" id="email" name="email" class="form-control">
+ <label for="email">Email</label>
+</div>
+<div class="form-floating">
+ <input type="text" id="roles" name="roles" class="form-control">
+ <label for="roles">Roles</label>
+</div>
+<div class="form-floating">
+ <input type="text" id="password" name="password" class="form-control">
+ <label for="password">Password</label>
+</div>
+<div class="form-floating">
+ <input type="text" id="createAt" name="createAt" class="form-control">
+ <label for="createAt">CreateAt</label>
+</div>
+<div class="form-floating">
+ <input type="text" id="updatedAt" name="updatedAt" class="form-control">
+ <label for="updatedAt">UpdatedAt</label>
+</div>
+</form>
+
+<a href="{{ path('user_index') }}">back to list</a>
+</div>
+{% endblock %}

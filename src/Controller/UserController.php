@@ -23,7 +23,7 @@ class UserController extends AbstractController
             ->getRepository(User::class)
             ->findAll();
 
-        return $this->render('user/index.html.twig', [
+        return $this->render('user/index.twig', [
             'users' => $users,
         ]);
     }
@@ -34,20 +34,17 @@ class UserController extends AbstractController
     public function new(Request $request): Response
     {
         $user = new User();
-        $form = $this->createForm(UserType::class, $user);
-        $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager = $this->getDoctrine()->getManager();
-            $entityManager->persist($user);
-            $entityManager->flush();
+//        if ($form->isSubmitted() && $form->isValid()) {
+//            $entityManager = $this->getDoctrine()->getManager();
+//            $entityManager->persist($user);
+//            $entityManager->flush();
+//
+//            return $this->redirectToRoute('user_index', [], Response::HTTP_SEE_OTHER);
+//        }
 
-            return $this->redirectToRoute('user_index', [], Response::HTTP_SEE_OTHER);
-        }
-
-        return $this->renderForm('user/new.html.twig', [
+        return $this->render('user/create.twig', [
             'user' => $user,
-            'form' => $form,
         ]);
     }
 

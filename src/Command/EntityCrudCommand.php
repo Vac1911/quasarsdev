@@ -7,9 +7,6 @@ use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Inflector\Inflector;
 use Doctrine\Inflector\InflectorFactory;
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\Persistence\Mapping\MappingException;
-use JetBrains\PhpStorm\ArrayShape;
-use ReflectionException;
 use Symfony\Bundle\MakerBundle\ConsoleStyle;
 use Symfony\Bundle\MakerBundle\DependencyBuilder;
 use Symfony\Bundle\MakerBundle\Doctrine\EntityDetails;
@@ -19,17 +16,18 @@ use Symfony\Bundle\MakerBundle\Str;
 use Symfony\Bundle\MakerBundle\Util\ClassNameDetails;
 use Symfony\Bundle\TwigBundle\TwigBundle;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\Input;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Bundle\MakerBundle\Generator;
 use Symfony\Bundle\MakerBundle\Maker\AbstractMaker;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\PropertyInfo\Extractor\PhpDocExtractor;
 use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
 use Symfony\Component\PropertyInfo\PropertyInfoExtractor;
 use Symfony\Component\Validator\Validation;
 use Symfony\Bundle\MakerBundle\Doctrine\DoctrineHelper;
+use function Symfony\Component\String\u;
 
 class EntityCrudCommand extends AbstractMaker
 {
@@ -39,7 +37,8 @@ class EntityCrudCommand extends AbstractMaker
     public string $routeName;
     public string $templatesPath;
 
-    protected Input $input;
+    protected InputInterface $input;
+    protected ConsoleStyle $io;
     protected Inflector $inflector;
     protected PropertyInfoExtractor $propInfo;
 
@@ -107,6 +106,7 @@ class EntityCrudCommand extends AbstractMaker
     public function generate(InputInterface $input, ConsoleStyle $io, Generator $generator)
     {
         $this->input = $input;
+        $this->io = $io;
         $this->entityClassDetails = $generator->createClassNameDetails(
             $input->getArgument('entity-class'),
             'Entity\\'
@@ -124,9 +124,9 @@ class EntityCrudCommand extends AbstractMaker
         $this->templatesPath = Str::asFilePath($this->controllerClassDetails->getRelativeNameWithoutSuffix());
 
 
-        $templates = ['create', 'edit'];
+        $templates = ['create', 'edit', 'index'];
         foreach ($templates as $template) {
-            $this->generateTemplate($generator, $template, $vars);
+            $this->generateTemplate($generator, $template);
         }
         $generator->writeChanges();
 
@@ -135,22 +135,23 @@ class EntityCrudCommand extends AbstractMaker
         return Command::SUCCESS;
     }
 
-    public function generateTemplate(Generator $generator, string $template, $vars)
+    public function generateTemplate(Generator $generator, string $template)
     {
         $twigPath = $this->templatesPath . '/' . $template . '.twig';
         $targetPath = $this->fileManager->getPathForTemplate($twigPath);
-        if($this->fileManager->fileExists($targetPath)) {
-            if($this->input->getOption('overwrite')) {
-
-            }
-            else {
+        if ($this->fileManager->fileExists($targetPath)) {
+            if ($this->input->getOption('overwrite')) {
+                $filesystem = new Filesystem();
+                $filesystem->remove($this->fileManager->absolutizePath($targetPath));
+                $this->io->warning('removed: ' . $this->fileManager->absolutizePath($targetPath));
+            } else {
                 return;
             }
         }
         $generator->generateTemplate(
             $twigPath,
             'src/Command/stubs/' . $template . '.stub.php',
-            $vars
+            $this->getVars()
         );
     }
 
@@ -177,18 +178,19 @@ class EntityCrudCommand extends AbstractMaker
 
     public function getVars(): array
     {
-        $entityVarPlural = lcfirst($this->inflector->pluralize($this->entityClassDetails->getShortName()));
-        $entityVarSingular = lcfirst($this->inflector->singularize($this->entityClassDetails->getShortName()));
+        $shortName = $this->entityClassDetails->getShortName();
+        $entityVarCamelSingular = u($this->inflector->singularize($shortName))->camel();
+        $entityVarCamelPlural = u($this->inflector->pluralize($shortName))->camel();
         return [
-            'entity_class_name'     => $this->entityClassDetails->getShortName(),
-            'entityVarPlural'       => $entityVarPlural,
-            'entityVarSingular'     => $entityVarSingular,
-            'entityTwigVarPlural'   => Str::asTwigVariable($entityVarPlural),
-            'entityTwigVarSingular' => Str::asTwigVariable($entityVarSingular),
-            'entity_identifier'     => $this->entityDoctrineDetails->getIdentifier(),
-            'entity_fields'         => $this->entityDoctrineDetails->getDisplayFields(),
-            'route_name'            => $this->routeName,
-            'form_fields'           => $this->getFormFields(),
+            'entity_class_name'      => $this->entityClassDetails->getShortName(),
+            'entityVarCamelSingular' => $entityVarCamelSingular,
+            'entityVarCamelPlural'   => $entityVarCamelPlural,
+            'entityVarSnakeSingular' => $entityVarCamelSingular->snake(),
+            'entityVarSnakePlural'   => $entityVarCamelPlural->snake(),
+            'entity_identifier'      => $this->entityDoctrineDetails->getIdentifier(),
+            'entity_fields'          => $this->entityDoctrineDetails->getDisplayFields(),
+            'route_name'             => $this->routeName,
+            'form_fields'            => $this->getFormFields(),
         ];
 
     }

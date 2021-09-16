@@ -1,11 +1,15 @@
+{% extends 'base.twig' %}
+
 {% block body %}
-<h1>Create new <?= $entity_class_name ?></h1>
+<div class="container">
+<h1>Create <?= $entity_class_name ?></h1>
 
 <form method="post">
-<? foreach ($form_fields as $form_field) {
+ <?php foreach ($form_fields as $form_field) {
  echo $form_field;
 } ?>
 </form>
 
 <a href="{{ path('<?= $route_name ?>_index') }}">back to list</a>
+</div>
 {% endblock %}
