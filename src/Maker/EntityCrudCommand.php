@@ -1,15 +1,15 @@
 <?php
 
-namespace App\Command;
+namespace App\Maker;
 
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
-use Doctrine\Common\Annotations\AnnotationReader;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\Inflector\Inflector;
 use Doctrine\Inflector\InflectorFactory;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\MakerBundle\ConsoleStyle;
 use Symfony\Bundle\MakerBundle\DependencyBuilder;
-use Symfony\Bundle\MakerBundle\Doctrine\EntityDetails;
+use Symfony\Bundle\MakerBundle\Exception\RuntimeCommandException;
 use Symfony\Bundle\MakerBundle\FileManager;
 use Symfony\Bundle\MakerBundle\InputConfiguration;
 use Symfony\Bundle\MakerBundle\Str;
@@ -32,10 +32,9 @@ use function Symfony\Component\String\u;
 class EntityCrudCommand extends AbstractMaker
 {
     public ClassNameDetails $entityClassDetails;
-    public ?EntityDetails $entityDoctrineDetails;
+    public EntityDetails $entityDetails;
     public ClassNameDetails $controllerClassDetails;
-    public string $routeName;
-    public string $templatesPath;
+    public array $vars;
 
     protected InputInterface $input;
     protected ConsoleStyle $io;
@@ -46,39 +45,29 @@ class EntityCrudCommand extends AbstractMaker
     private FileManager $fileManager;
     private EntityManagerInterface $em;
 
+    const STUB_DIR = 'stubs/';
+
+    const ACTION_MAP = [
+        'list' => [
+            'stub' => 'index.stub.php',
+            'output' => 'index.twig'
+        ],
+        'create' => [
+            'stub' => 'create.stub.php',
+            'output' => 'create.twig'
+        ],
+        'edit' => [
+            'stub' => 'edit.stub.php',
+            'output' => 'edit.twig'
+        ],
+    ];
+
     public function __construct(DoctrineHelper $doctrineHelper, FileManager $fileManager, EntityManagerInterface $em)
     {
         $this->doctrineHelper = $doctrineHelper;
         $this->fileManager = $fileManager;
         $this->em = $em;
         $this->inflector = InflectorFactory::create()->build();
-
-        // a full list of extractors is shown further below
-        $phpDocExtractor = new PhpDocExtractor();
-        $reflectionExtractor = new ReflectionExtractor();
-
-        // list of PropertyListExtractorInterface (any iterable)
-        $listExtractors = [$reflectionExtractor];
-
-        // list of PropertyTypeExtractorInterface (any iterable)
-        $typeExtractors = [$phpDocExtractor, $reflectionExtractor];
-
-        // list of PropertyDescriptionExtractorInterface (any iterable)
-        $descriptionExtractors = [$phpDocExtractor];
-
-        // list of PropertyAccessExtractorInterface (any iterable)
-        $accessExtractors = [$reflectionExtractor];
-
-        // list of PropertyInitializableExtractorInterface (any iterable)
-        $propertyInitializableExtractors = [$reflectionExtractor];
-
-        $this->propInfo = new PropertyInfoExtractor(
-            $listExtractors,
-            $typeExtractors,
-            $descriptionExtractors,
-            $accessExtractors,
-            $propertyInitializableExtractors
-        );
     }
 
     public static function getCommandName(): string
@@ -117,16 +106,13 @@ class EntityCrudCommand extends AbstractMaker
             'Controller'
         );
 
-        $reader = new AnnotationReader();
-        $this->entityDoctrineDetails = $this->doctrineHelper->createDoctrineDetails($this->entityClassDetails->getFullName());
-
-        $this->routeName = Str::asRouteName($this->controllerClassDetails->getRelativeNameWithoutSuffix());
-        $this->templatesPath = Str::asFilePath($this->controllerClassDetails->getRelativeNameWithoutSuffix());
+        $this->entityDetails = new EntityDetails($this->doctrineHelper->getMetadata($this->entityClassDetails->getFullName()));
+        $this->buildVars();
 
 
-        $templates = ['create', 'edit', 'index'];
-        foreach ($templates as $template) {
-            $this->generateTemplate($generator, $template);
+        $actions = ['create', 'edit', 'list'];
+        foreach ($actions as $action) {
+            $this->generateTemplate($generator, $action);
         }
         $generator->writeChanges();
 
@@ -135,62 +121,98 @@ class EntityCrudCommand extends AbstractMaker
         return Command::SUCCESS;
     }
 
-    public function generateTemplate(Generator $generator, string $template)
+    public function generateTemplate(Generator $generator, string $action)
     {
-        $twigPath = $this->templatesPath . '/' . $template . '.twig';
-        $targetPath = $this->fileManager->getPathForTemplate($twigPath);
+        $outputPath = $this->vars['templates_path'] . '/' . self::ACTION_MAP[$action]['output'];
+
+        $this->checkPath($this->fileManager->getPathForTemplate($outputPath));
+
+        $params = collect($this->vars)->merge([
+            'fields' => $this->renderFields($action),
+        ])->toArray();
+
+//        'list_fields'            => $this->entityDetails->getCmsProps('list'),
+//        'form_fields'            => $this->getFormFields($action),
+        $generator->generateTemplate(
+            $outputPath,
+            self::STUB_DIR . self::ACTION_MAP[$action]['stub'],
+            $params
+        );
+    }
+
+    protected function checkPath(string $targetPath)
+    {
         if ($this->fileManager->fileExists($targetPath)) {
             if ($this->input->getOption('overwrite')) {
                 $filesystem = new Filesystem();
                 $filesystem->remove($this->fileManager->absolutizePath($targetPath));
                 $this->io->warning('removed: ' . $this->fileManager->absolutizePath($targetPath));
             } else {
-                return;
+                throw new RuntimeCommandException(sprintf('The file "%s" can\'t be generated because it already exists.', $targetPath));
             }
         }
-        $generator->generateTemplate(
-            $twigPath,
-            'src/Command/stubs/' . $template . '.stub.php',
-            $this->getVars()
-        );
     }
 
-    public function getFormFields(): array
+    public function renderFields(string $action): Collection
     {
-        $formFields = array_keys($this->entityDoctrineDetails->getFormFields());
-        foreach ($formFields as $i => $field) {
-            $formFields[$i] = $this->parseStub(
-                'src/Command/stubs/input/text.stub.php',
-                $this->entityDoctrineDetails->getDisplayFields()[$field]
-            );
+        $fields = collect();
+        $props = $this->entityDetails->getProps();
+
+        foreach ($props as $prop) {
+            $prop->display = $this->renderField($prop, $action);
+            if (!is_null($prop->display)) {
+                $fields->push($prop);
+            }
         }
-        return $formFields;
+
+        return $fields;
     }
 
-    public function parseStub(string $templatePath, array $parameters): string
+    public function renderField($prop, string $action): ?string
     {
+        if (!$prop->cms) return null;
+
+        $supportedAction = $prop->cms->supportsAction($action);
+
+        if (!$supportedAction) {
+            if ($action == 'edit' && $prop->cms->supportsAction('view')) $action = 'view';
+            else return null;
+        }
+
+        $prop->mapping['action'] = $action;
+        $file = match ($action) {
+            'create', 'edit' => 'input',
+            'view', 'list' => 'display',
+        };
+        $type = 'text';
+
+        return $this->parseStub(sprintf('%sfield/%s/%s.stub.php', self::STUB_DIR, $type, $file), $prop->mapping);
+    }
+
+    public function parseStub(string $templatePath, array $mapping): string
+    {
+        $params = collect($mapping)->merge($this->vars)->toArray();
         ob_start();
-        extract($parameters, \EXTR_SKIP);
+        extract($params, \EXTR_SKIP);
         include $templatePath;
 
         return ob_get_clean();
     }
 
-    public function getVars(): array
+    public function buildVars()
     {
         $shortName = $this->entityClassDetails->getShortName();
         $entityVarCamelSingular = u($this->inflector->singularize($shortName))->camel();
         $entityVarCamelPlural = u($this->inflector->pluralize($shortName))->camel();
-        return [
+        $this->vars = [
             'entity_class_name'      => $this->entityClassDetails->getShortName(),
             'entityVarCamelSingular' => $entityVarCamelSingular,
             'entityVarCamelPlural'   => $entityVarCamelPlural,
             'entityVarSnakeSingular' => $entityVarCamelSingular->snake(),
             'entityVarSnakePlural'   => $entityVarCamelPlural->snake(),
-            'entity_identifier'      => $this->entityDoctrineDetails->getIdentifier(),
-            'entity_fields'          => $this->entityDoctrineDetails->getDisplayFields(),
-            'route_name'             => $this->routeName,
-            'form_fields'            => $this->getFormFields(),
+            'entity_identifier'      => $this->entityDetails->getIdentifier(),
+            'route_name'             => Str::asRouteName($this->controllerClassDetails->getRelativeNameWithoutSuffix()),
+            'templates_path'         => Str::asFilePath($this->controllerClassDetails->getRelativeNameWithoutSuffix())
         ];
 
     }

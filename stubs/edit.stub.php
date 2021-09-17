@@ -5,11 +5,11 @@
 <h1>Edit <?= $entity_class_name ?></h1>
 
 <form method="post">
-<?php foreach ($form_fields as $form_field) {
- echo $form_field;
+<?php foreach ($fields as $field) {
+ echo $field->display;
 } ?>
 </form>
 
-<a href="{{ path('<?= $route_name ?>_index') }}">back to list</a>
+<a class="btn btn-primary" href="{{ path('<?= $route_name ?>.index') }}">Back to List</a>
 </div>
 {% endblock %}

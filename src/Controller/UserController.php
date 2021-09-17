@@ -9,14 +9,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-/**
- * @Route("/user")
- */
 class UserController extends AbstractController
 {
-    /**
-     * @Route("/", name="user_index", methods={"GET"})
-     */
+    #[Route('/user', name: 'user.index', methods: ['GET'])]
     public function index(): Response
     {
         $users = $this->getDoctrine()
@@ -28,25 +23,26 @@ class UserController extends AbstractController
         ]);
     }
 
-    /**
-     * @Route("/new", name="user_new", methods={"GET","POST"})
-     */
-    public function new(Request $request): Response
+    #[Route('/user/new', name: 'user.create', methods: ['GET'])]
+    public function create(Request $request): Response
     {
         $user = new User();
-
-//        if ($form->isSubmitted() && $form->isValid()) {
-//            $entityManager = $this->getDoctrine()->getManager();
-//            $entityManager->persist($user);
-//            $entityManager->flush();
-//
-//            return $this->redirectToRoute('user_index', [], Response::HTTP_SEE_OTHER);
-//        }
 
         return $this->render('user/create.twig', [
             'user' => $user,
         ]);
     }
+    #[Route('/user/new', name: 'user.store', methods: ['POST'])]
+    public function store(Request $request): Response
+    {
+        $user = new User();
+
+        return $this->render('user/create.twig', [
+            'user' => $user,
+        ]);
+    }
+
+
 
     /**
      * @Route("/{id}", name="user_show", methods={"GET"})

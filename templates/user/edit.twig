@@ -6,31 +6,24 @@
 
 <form method="post">
 <div class="form-floating">
- <input type="text" id="name" name="name" class="form-control">
+ <input type="text" id="name" name="name" class="form-control" placeholder="Name">
  <label for="name">Name</label>
 </div>
 <div class="form-floating">
- <input type="text" id="email" name="email" class="form-control">
+ <input type="text" id="email" name="email" class="form-control" placeholder="Email">
  <label for="email">Email</label>
 </div>
-<div class="form-floating">
- <input type="text" id="roles" name="roles" class="form-control">
- <label for="roles">Roles</label>
+<div class="">
+  <span>{{user.roles}}</span>
 </div>
-<div class="form-floating">
- <input type="text" id="password" name="password" class="form-control">
- <label for="password">Password</label>
+<div class="">
+  <span>{{user.createAt}}</span>
 </div>
-<div class="form-floating">
- <input type="text" id="createAt" name="createAt" class="form-control">
- <label for="createAt">CreateAt</label>
-</div>
-<div class="form-floating">
- <input type="text" id="updatedAt" name="updatedAt" class="form-control">
- <label for="updatedAt">UpdatedAt</label>
+<div class="">
+  <span>{{user.updatedAt}}</span>
 </div>
 </form>
 
-<a href="{{ path('user_index') }}">back to list</a>
+<a class="btn btn-primary" href="{{ path('user.index') }}">Back to List</a>
 </div>
 {% endblock %}

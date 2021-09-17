@@ -3,7 +3,11 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use DateTimeImmutable;
 use Doctrine\ORM\Mapping as ORM;
+use Qis\Annotation\CMS as CMS;
+use Qis\Entity\Traits\Identifiable;
+use Qis\Entity\Traits\Resolvable;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
@@ -12,54 +16,62 @@ use Symfony\Component\Security\Core\User\UserInterface;
  */
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
+    use Resolvable, Identifiable;
+
     /**
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
      */
-    private $id;
+    protected $id;
 
     /**
      * @var string
      *
      * @ORM\Column(name="name", type="string", length=255, nullable=false)
+     * @CMS\Property(required=true)
      */
-    private $name;
+    protected $name;
 
     /**
      * @ORM\Column(type="string", length=180, unique=true)
+     * @CMS\Property(required=true)
      */
-    private $email;
+    protected $email;
 
     /**
      * @ORM\Column(type="json")
+     * @CMS\Property(editable=false)
      */
-    private $roles = [];
+    protected $roles = [];
 
     /**
      * @var string The hashed password
      * @ORM\Column(type="string")
      */
-    private $password;
+    protected $password;
 
     /**
      * @var ?DateTimeImmutable
      *
      * @ORM\Column(name="create_at", type="datetime_immutable", nullable=false)
+     * @CMS\Property(editable=false)
      */
-    private $createAt;
+    protected $createAt;
 
     /**
      * @var ?DateTimeImmutable
      *
      * @ORM\Column(name="updated_at", type="datetime_immutable", nullable=true)
+     * @CMS\Property(editable=false)
      */
-    private $updatedAt = null;
+    protected $updatedAt = null;
 
     /**
      * @ORM\OneToMany(targetEntity=Post::class, mappedBy="author")
+     * @CMS\Property()
      */
-    private $posts;
+    protected $posts;
 
     public function getId(): ?int
     {
