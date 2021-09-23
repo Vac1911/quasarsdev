@@ -5,9 +5,9 @@ namespace App\Entity;
 use App\Repository\UserRepository;
 use DateTimeImmutable;
 use Doctrine\ORM\Mapping as ORM;
-use Qis\Annotation\CMS as CMS;
-use Qis\Entity\Traits\Identifiable;
-use Qis\Entity\Traits\Resolvable;
+use Qis\Orm\Annotation\CMS as CMS;
+use Qis\Orm\Entity\Traits\Identifiable;
+use Qis\Orm\Entity\Traits\Resolvable;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 

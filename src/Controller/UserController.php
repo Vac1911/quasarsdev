@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Form\UserType;
+use Qis\Facades\EntityHelper;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -36,6 +37,8 @@ class UserController extends AbstractController
     public function store(Request $request): Response
     {
         $user = new User();
+
+        dd(EntityHelper::isNewEntity($user));
 
         return $this->render('user/create.twig', [
             'user' => $user,

@@ -1,7 +1,7 @@
 {
     "type": "project",
     "license": "proprietary",
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
         "php": ">=7.4",
@@ -12,7 +12,9 @@
         "doctrine/doctrine-bundle": "^2.4",
         "doctrine/doctrine-migrations-bundle": "^3.1",
         "doctrine/orm": "^2.9",
+        "nesbot/carbon": "^2.53",
         "phpdocumentor/reflection-docblock": "^5.2",
+        "qisct/symfony-orm": "dev-main",
         "sensio/framework-extra-bundle": "^6.1",
         "symfony/asset": "5.3.*",
         "symfony/console": "5.3.*",
@@ -41,8 +43,7 @@
         "symfony/web-link": "5.3.*",
         "symfony/yaml": "5.3.*",
         "twig/extra-bundle": "^2.12|^3.0",
-        "twig/twig": "^2.12|^3.0",
-        "qisct/symfony-ext": "*@dev"
+        "twig/twig": "^2.12|^3.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^9.5",
@@ -56,8 +57,8 @@
     },
     "repositories":[
         {
-            "type": "vcs",
-            "url": "git@github.com:QISCT/symfony-ext.git"
+            "type": "composer",
+            "url": "http://localhost:8001/packages.json"
         }
     ],
     "config": {
@@ -65,6 +66,7 @@
         "preferred-install": {
             "*": "dist"
         },
+        "secure-http": false,
         "sort-packages": true
     },
     "autoload": {

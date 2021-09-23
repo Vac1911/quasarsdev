@@ -11,7 +11,7 @@
  </form>
  <div class="d-flex justify-content-around">
   <a class="btn btn-secondary" href="{{ path('<?= $route_name ?>.index') }}">Back to List</a>
-  <button type="submit" class="btn btn-secondary"></button>
+  <button type="submit" form="form" class="btn btn-primary">Create</button>
  </div>
 </div>
 {% endblock %}
