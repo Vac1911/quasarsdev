@@ -4,7 +4,7 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
-        "php": ">=7.4",
+        "php": ">=8.0",
         "ext-ctype": "*",
         "ext-iconv": "*",
         "composer/package-versions-deprecated": "1.11.99.3",
@@ -14,6 +14,8 @@
         "doctrine/orm": "^2.9",
         "nesbot/carbon": "^2.53",
         "phpdocumentor/reflection-docblock": "^5.2",
+        "qisct/symfony-collection": "dev-main",
+        "qisct/symfony-facade": "dev-main",
         "qisct/symfony-orm": "dev-main",
         "sensio/framework-extra-bundle": "^6.1",
         "symfony/asset": "5.3.*",
@@ -58,7 +60,7 @@
     "repositories":[
         {
             "type": "composer",
-            "url": "http://localhost:8001/packages.json"
+            "url": "https://packages.quasarwebdev.com/"
         }
     ],
     "config": {

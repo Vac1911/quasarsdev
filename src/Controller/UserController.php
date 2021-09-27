@@ -3,8 +3,6 @@
 namespace App\Controller;
 
 use App\Entity\User;
-use App\Form\UserType;
-use Qis\Facades\EntityHelper;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -37,22 +35,19 @@ class UserController extends AbstractController
     public function store(Request $request): Response
     {
         $user = new User();
+        $user->fill($request->request->all());
+        $this->getDoctrine()->getManager()->persist($user);
+        $this->getDoctrine()->getManager()->flush();
 
-        dd(EntityHelper::isNewEntity($user));
-
-        return $this->render('user/create.twig', [
-            'user' => $user,
-        ]);
+        return $this->redirectToRoute('user.show', ['user' => $user->id]);
     }
 
 
 
-    /**
-     * @Route("/{id}", name="user_show", methods={"GET"})
-     */
+    #[Route('/user/{user}', name: 'user.show', methods: ['GET'])]
     public function show(User $user): Response
     {
-        return $this->render('user/show.html.twig', [
+        return $this->render('user/show.twig', [
             'user' => $user,
         ]);
     }

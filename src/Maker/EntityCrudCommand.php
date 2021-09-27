@@ -60,6 +60,10 @@ class EntityCrudCommand extends AbstractMaker
             'stub' => 'edit.stub.php',
             'output' => 'edit.twig'
         ],
+        'view' => [
+            'stub' => 'show.stub.php',
+            'output' => 'show.twig'
+        ],
     ];
 
     public function __construct(DoctrineHelper $doctrineHelper, FileManager $fileManager, EntityManagerInterface $em)
@@ -109,9 +113,7 @@ class EntityCrudCommand extends AbstractMaker
         $this->entityDetails = new EntityDetails($this->doctrineHelper->getMetadata($this->entityClassDetails->getFullName()));
         $this->buildVars();
 
-
-        $actions = ['create', 'edit', 'list'];
-        foreach ($actions as $action) {
+        foreach (collect(self::ACTION_MAP)->keys() as $action) {
             $this->generateTemplate($generator, $action);
         }
         $generator->writeChanges();
@@ -131,8 +133,8 @@ class EntityCrudCommand extends AbstractMaker
             'fields' => $this->renderFields($action),
         ])->toArray();
 
-//        'list_fields'            => $this->entityDetails->getCmsProps('list'),
-//        'form_fields'            => $this->getFormFields($action),
+        dump($params);
+
         $generator->generateTemplate(
             $outputPath,
             self::STUB_DIR . self::ACTION_MAP[$action]['stub'],
@@ -170,21 +172,20 @@ class EntityCrudCommand extends AbstractMaker
 
     public function renderField($prop, string $action): ?string
     {
-        if (!$prop->cms) return null;
+        if (!$prop->getCmsAnnotation()) return null;
 
-        $supportedAction = $prop->cms->supportsAction($action);
+        $supportedAction = $prop->supportsAction($action);
 
         if (!$supportedAction) {
-            if ($action == 'edit' && $prop->cms->supportsAction('view')) $action = 'view';
+            if ($action == 'edit' && $prop->supportsAction('view')) $action = 'view';
             else return null;
         }
 
-        $prop->mapping['action'] = $action;
         $file = match ($action) {
             'create', 'edit' => 'input',
             'view', 'list' => 'display',
         };
-        $type = 'text';
+        $type = $prop->getCmsType();
 
         return $this->parseStub(sprintf('%sfield/%s/%s.stub.php', self::STUB_DIR, $type, $file), $prop->mapping);
     }

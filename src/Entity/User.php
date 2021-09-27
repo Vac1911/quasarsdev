@@ -6,6 +6,7 @@ use App\Repository\UserRepository;
 use DateTimeImmutable;
 use Doctrine\ORM\Mapping as ORM;
 use Qis\Orm\Annotation\CMS as CMS;
+use Qis\Orm\Entity\Traits\Fillable;
 use Qis\Orm\Entity\Traits\Identifiable;
 use Qis\Orm\Entity\Traits\Resolvable;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -16,14 +17,16 @@ use Symfony\Component\Security\Core\User\UserInterface;
  */
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
-    use Resolvable, Identifiable;
+    use Fillable, Identifiable;
 
     /**
+     * @var int
+     *
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
      */
-    protected $id;
+    protected int $id;
 
     /**
      * @var string
@@ -31,64 +34,49 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @ORM\Column(name="name", type="string", length=255, nullable=false)
      * @CMS\Property(required=true)
      */
-    protected $name;
+    protected string $name;
 
     /**
      * @ORM\Column(type="string", length=180, unique=true)
      * @CMS\Property(required=true)
      */
-    protected $email;
+    protected string $email;
 
     /**
      * @ORM\Column(type="json")
      * @CMS\Property(editable=false)
      */
-    protected $roles = [];
+    protected array $roles = [];
 
     /**
-     * @var string The hashed password
+     * @var ?string The hashed password
      * @ORM\Column(type="string")
      */
-    protected $password;
+    protected ?string $password;
 
     /**
-     * @var ?DateTimeImmutable
+     * @var DateTimeImmutable
      *
+     * @CMS\AddedField
      * @ORM\Column(name="create_at", type="datetime_immutable", nullable=false)
      * @CMS\Property(editable=false)
      */
-    protected $createAt;
+    protected DateTimeImmutable $createAt;
 
     /**
-     * @var ?DateTimeImmutable
+     * @var DateTimeImmutable
      *
-     * @ORM\Column(name="updated_at", type="datetime_immutable", nullable=true)
+     * @CMS\UpdatedField
+     * @ORM\Column(name="updated_at", type="datetime_immutable", nullable=false)
      * @CMS\Property(editable=false)
      */
-    protected $updatedAt = null;
+    protected DateTimeImmutable $updatedAt;
 
     /**
      * @ORM\OneToMany(targetEntity=Post::class, mappedBy="author")
      * @CMS\Property()
      */
     protected $posts;
-
-    public function getId(): ?int
-    {
-        return $this->id;
-    }
-
-    public function getEmail(): ?string
-    {
-        return $this->email;
-    }
-
-    public function setEmail(string $email): self
-    {
-        $this->email = $email;
-
-        return $this;
-    }
 
     /**
      * A visual identifier that represents this user.
@@ -133,13 +121,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getPassword(): string
     {
         return $this->password;
-    }
-
-    public function setPassword(string $password): self
-    {
-        $this->password = $password;
-
-        return $this;
     }
 
     /**

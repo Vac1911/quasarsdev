@@ -4,7 +4,7 @@ namespace App\Maker;
 
 use Doctrine\Persistence\Mapping\ClassMetadata;
 use Doctrine\Common\Annotations\AnnotationReader;
-use Qis\Annotation\CMS\Property;
+use Qis\Orm\Annotation\CMS\Property;
 use Qis\Collections\Collection;
 
 class EntityDetails
@@ -17,32 +17,18 @@ class EntityDetails
     {
     }
 
-    public function getRepositoryClass()
+    public function getRepositoryClass(): ?string
     {
         return $this->metadata->customRepositoryClassName;
     }
 
-    public function getIdentifier()
+    public function getIdentifier(): string
     {
         return $this->metadata->identifier[0];
     }
 
-    public function getProps()
+    public function getProps(): Collection
     {
-        $reader = new AnnotationReader();
-        return collect($this->metadata->fieldMappings)->map(function ($mapping) use ($reader) {
-            $refl = $this->metadata->getReflectionProperty($mapping['fieldName']);
-            $cms = $reader->getPropertyAnnotation($refl, Property::class);
-            return (object) compact('mapping', 'refl', 'cms');
-        });
-    }
-
-    /**
-     * @param string $action list|view|edit|create|search
-     * @return Collection
-     */
-    public function getCmsProps(string $action): Collection
-    {
-        return $this->getProps()->filter(fn($prop) => $prop['cms'] && $prop['cms']->{$action . 'able'});
+        return collect($this->metadata->fieldMappings)->map(fn($mapping) => new PropertyDetails($mapping['fieldName'], $this->metadata));
     }
 }
