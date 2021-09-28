@@ -1,0 +1,30 @@
+{% extends 'base.twig' %}
+
+{% block body %}
+<div class="container">
+ <h1>View User</h1>
+ <div>
+  <div class="">
+  <div>Name</div>
+  <span>{{user.name}}</span>
+</div>
+<div class="">
+  <div>Email</div>
+  <span>{{user.email}}</span>
+</div>
+<div class="">
+  <div>Roles</div>
+  <span>{{user.roles|join(', ')}}</span>
+</div>
+<div class="">
+  <div>CreateAt</div>
+  <span>{{user.createAt|date("Y-m-d")}}</span>
+</div>
+<div class="">
+  <div>UpdatedAt</div>
+  <span>{{user.updatedAt|date("Y-m-d")}}</span>
+</div>
+ </div>
+ <a class="btn btn-primary" href="{{ path('user.index') }}">Back to List</a>
+</div>
+{% endblock %}

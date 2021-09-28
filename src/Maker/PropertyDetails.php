@@ -7,6 +7,7 @@ use Doctrine\Common\Annotations\AnnotationReader;
 use Qis\Orm\Annotation\CMS\Property;
 use Qis\Collections\Collection;
 use ReflectionProperty;
+use function Symfony\Component\String\u;
 
 class PropertyDetails
 {
@@ -36,10 +37,14 @@ class PropertyDetails
             $this->reader->getPropertyAnnotation($this->reflection, 'var') ??
             $this->mapping['type'];
 
+        $type = u($type)->snake()->toString();
+
         return match($type) {
             'string' => 'string',
-            'int', 'float', 'decimal' => 'number',
-            'text' => 'text'
+            'text' => 'text',
+            'int', 'integer', 'float', 'decimal' => 'number',
+            'datetime', 'date_time', 'date_time_immutable' => 'datetime',
+            default => $type
         };
     }
 

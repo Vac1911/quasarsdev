@@ -2,31 +2,32 @@
 
 {% block body %}
 <div class="container">
-<h1>Edit User</h1>
-
-<form method="post">
-<div class="form-floating">
- <input type="text" id="name" name="name" class="form-control" placeholder="Name">
+ <h1>Edit User</h1>
+ <form method="post" id="form">
+  <div class="form-floating">
+ <input type="text" id="name" name="name" value="{{user.name}}" class="form-control" placeholder="Name">
  <label for="name">Name</label>
 </div>
 <div class="form-floating">
- <input type="text" id="email" name="email" class="form-control" placeholder="Email">
+ <input type="text" id="email" name="email" value="{{user.email}}" class="form-control" placeholder="Email">
  <label for="email">Email</label>
 </div>
 <div class="">
   <div>Roles</div>
-  <span>{{user.roles}}</span>
+  <span>{{user.roles|join(', ')}}</span>
 </div>
 <div class="">
   <div>CreateAt</div>
-  <span>{{user.createAt}}</span>
+  <span>{{user.createAt|date("Y-m-d")}}</span>
 </div>
 <div class="">
   <div>UpdatedAt</div>
-  <span>{{user.updatedAt}}</span>
+  <span>{{user.updatedAt|date("Y-m-d")}}</span>
 </div>
-</form>
-
-<a class="btn btn-primary" href="{{ path('user.index') }}">Back to List</a>
+ </form>
+ <div class="d-flex justify-content-between">
+  <a class="btn btn-secondary" href="{{ path('user.index') }}">Back to List</a>
+  <button type="submit" form="form" class="btn btn-primary">Update</button>
+ </div>
 </div>
 {% endblock %}

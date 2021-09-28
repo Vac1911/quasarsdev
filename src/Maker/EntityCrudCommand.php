@@ -133,8 +133,6 @@ class EntityCrudCommand extends AbstractMaker
             'fields' => $this->renderFields($action),
         ])->toArray();
 
-        dump($params);
-
         $generator->generateTemplate(
             $outputPath,
             self::STUB_DIR . self::ACTION_MAP[$action]['stub'],
@@ -167,6 +165,7 @@ class EntityCrudCommand extends AbstractMaker
             }
         }
 
+
         return $fields;
     }
 
@@ -187,12 +186,12 @@ class EntityCrudCommand extends AbstractMaker
         };
         $type = $prop->getCmsType();
 
-        return $this->parseStub(sprintf('%sfield/%s/%s.stub.php', self::STUB_DIR, $type, $file), $prop->mapping);
+        return $this->parseStub(sprintf('%sfield/%s/%s.stub.php', self::STUB_DIR, $type, $file), $prop->mapping, compact('action'));
     }
 
-    public function parseStub(string $templatePath, array $mapping): string
+    public function parseStub(string $templatePath, array $mapping, array $extraVars = []): string
     {
-        $params = collect($mapping)->merge($this->vars)->toArray();
+        $params = collect($mapping)->merge($extraVars)->merge($this->vars)->toArray();
         ob_start();
         extract($params, \EXTR_SKIP);
         include $templatePath;

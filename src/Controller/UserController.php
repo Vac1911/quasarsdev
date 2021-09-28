@@ -52,24 +52,22 @@ class UserController extends AbstractController
         ]);
     }
 
-    /**
-     * @Route("/{id}/edit", name="user_edit", methods={"GET","POST"})
-     */
-    public function edit(Request $request, User $user): Response
+    #[Route('/user/{user}/edit', name: 'user.edit', methods: ['GET'])]
+    public function edit(User $user): Response
     {
-        $form = $this->createForm(UserType::class, $user);
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-            $this->getDoctrine()->getManager()->flush();
-
-            return $this->redirectToRoute('user_index', [], Response::HTTP_SEE_OTHER);
-        }
-
-        return $this->renderForm('user/edit.html.twig', [
+        return $this->render('user/edit.twig', [
             'user' => $user,
-            'form' => $form,
         ]);
+    }
+
+    #[Route('/user/{user}/edit', name: 'user.update', methods: ['POST'])]
+    public function update(Request $request, User $user): Response
+    {
+        $user->fill($request->request->all());
+        $this->getDoctrine()->getManager()->persist($user);
+        $this->getDoctrine()->getManager()->flush();
+
+        return $this->redirectToRoute('user.show', ['user' => $user->id]);
     }
 
     /**
@@ -83,6 +81,6 @@ class UserController extends AbstractController
             $entityManager->flush();
         }
 
-        return $this->redirectToRoute('user_index', [], Response::HTTP_SEE_OTHER);
+        return $this->redirectToRoute('user.index', [], Response::HTTP_SEE_OTHER);
     }
 }

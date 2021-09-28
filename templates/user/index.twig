@@ -1,0 +1,54 @@
+{% extends 'base.twig' %}
+
+{% block body %}
+<div class="container">
+ <h1>User List</h1>
+ <a class="btn btn-primary" href="{{ path('user.create') }}">Create</a>
+ <table class="table table-striped dt">
+  <thead>
+  <tr>
+       <th>Name</th>
+       <th>Email</th>
+       <th>Roles</th>
+       <th>CreateAt</th>
+       <th>UpdatedAt</th>
+      <th></th>
+  </tr>
+  </thead>
+  <tbody>
+  {% for user in users %}
+  <tr>
+       <td><div class="">
+  <span>{{user.name}}</span>
+</div>
+</td>
+       <td><div class="">
+  <span>{{user.email}}</span>
+</div>
+</td>
+       <td><div class="">
+  <span>{{user.roles|join(', ')}}</span>
+</div>
+</td>
+       <td><div class="">
+  <span>{{user.createAt|date("Y-m-d")}}</span>
+</div>
+</td>
+       <td><div class="">
+  <span>{{user.updatedAt|date("Y-m-d")}}</span>
+</div>
+</td>
+      <td>
+    <a class="btn btn-primary"
+     href="{{ path('user.show', {user: user.id}) }}"
+    >View</a>
+    <a class="btn btn-primary"
+     href="{{ path('user.edit', {user: user.id}) }}"
+    >Edit</a>
+   </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+ </table>
+</div>
+{% endblock %}
